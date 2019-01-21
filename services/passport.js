@@ -31,7 +31,7 @@ passport.use(new GoogleStrategy({
 		.then((existingUser) => {
 			if (existingUser) {
 				// we already have a record with the given profile
-				return done(null, existingUser);
+				done(null, existingUser);
 			} else {
 				// we don't have
 				new User( { googleId: profile.id }).save()
