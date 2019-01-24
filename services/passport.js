@@ -21,22 +21,21 @@ passport.deserializeUser((id, done) => {
 // requested eariler
 // User.findOne returns a promise, we can find the result from it
 // if user exists, there will be an existingUser object
+// callbackURL: '/auth/google/callback', replace this line for production
 passport.use(new GoogleStrategy({
 	clientID: keys.googleClientID,
 	clientSecret: keys.googleClientSecret,
 	callbackURL: '/auth/google/callback',
-	proxy: true
-	}, (accessToken, refreshToken, profile, done) => {
-		User.findOne({ googleId: profile.id })
-		.then((existingUser) => {
-			if (existingUser) {
-				// we already have a record with the given profile
-				done(null, existingUser);
-			} else {
-				// we don't have
-				new User( { googleId: profile.id }).save()
-				.then(user => done(null, user));
-			}
-		});
+	//proxy: true
+	}, 
+	async (accessToken, refreshToken, profile, done) => {
+		const existingUser = await User.findOne({ googleId: profile.id })
+		if (existingUser) {
+			// we already have a record with the given profile
+			return done(null, existingUser);
+		} 
+			// we don't have
+			const user = await new User( { googleId: profile.id }).save()
+			done(null, user);
 	}
 ));
