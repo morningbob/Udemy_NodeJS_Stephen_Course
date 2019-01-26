@@ -1,0 +1,35 @@
+const keys = require('../config/keys');
+const stripe = require("stripe")(keys.stripeSecretKey);
+const requireLogin = require('../middlewares/requireLogin');
+// there is a case when users, or anyone, directly access
+// the /api/stripe route, the user may not login or
+// even may not be a user, how to handle this?
+// that we'll make a middleware to make sure users already loggedin
+// that apply to just some routes
+module.exports = app => {
+	// express needs one of the following function to finally pass
+	// a respond back to it
+	app.post('/api/stripe', requireLogin, async(req, res) => {
+		
+		console.log(req.body);
+
+		// in this req.body, there is a id , which is the token
+		// we get this token to create a charge object
+		const charge = await stripe.charges.create({
+			amount: 500,
+			currency: 'usd',
+			description: '$5 dollars for 5 credits',
+			source: req.body.id
+		});
+		console.log(charge);
+		req.user.credits += 5;
+		// put to database, and we'll use this user object
+		const user = await req.user.save();
+		res.send(user);
+	});
+};
+
+// stripe return us the token in the request object
+// that if we use the BodyParser to parse the payload
+// the token will be accessed in request.body
+
